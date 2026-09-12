@@ -20,6 +20,12 @@ kendi Rust yazılımınızla çalıştırın — merkezi bir gösterge panelinde
 
 <p align="center"><em><strong>YAPAY ZEKA ÇIKTI MERTLİK BOZULDU 3:</strong> NetOpsWan SD-WAN — Cisco Meraki MX64 cihazlarının stok bulut lisanslı firmware'i yerine kendi geliştirdiğimiz açık kaynak firmware ve otonom Rust ajan devrimi!</em></p>
 
+<br />
+
+<img src="docs/assets/dashboard-fleet.jpg" alt="NetOpsWan Merkezi Yönetim Paneli" width="100%" />
+
+<p align="center"><strong>Canlı Sistem Görünümü:</strong> Cisco Meraki MX64 cihaz filosu, WireGuard tünel durumları ve merkezi yönetim konsolu</p>
+
 </div>
 
 ---
@@ -28,6 +34,7 @@ kendi Rust yazılımınızla çalıştırın — merkezi bir gösterge panelinde
 
 - [English summary](#english-summary)
 - [Bu proje ne, neden var?](#bu-proje-ne-neden-var)
+- [Ekran görüntüleri ve canlı gösterge paneli](#ekran-görüntüleri-ve-canlı-gösterge-paneli)
 - [Mimari: nasıl çalışıyor?](#mimari-nasıl-çalışıyor)
 - [Öne çıkan özellikler](#öne-çıkan-özellikler)
 - [Teknoloji yığını](#teknoloji-yığını)
@@ -81,6 +88,45 @@ kaygısı.
 Bu depo, bu fikrin gerçek bir işletmede (ARIOT) üretimde çalışan tam
 uygulamasıdır: merkez sunucu, saha ajanı, ve ikisini yöneten bir web
 panosu.
+
+## Ekran görüntüleri ve canlı gösterge paneli
+
+NetOpsWan'ın Next.js 16 ve TailwindCSS tabanlı modern operatör gösterge paneli; sahada çalışan tüm Cisco Meraki MX64 uç noktalarını, WireGuard tünellerini, yerel alt ağları ve güvenlik duvarı kurallarını canlı olarak yönetir:
+
+### 1. Cihaz & Şube Filosu Yönetimi
+OpenWrt ve `netops-agent` yüklü Cisco Meraki MX64 cihazının canlı takibi, WireGuard tünel IP'si (`10.8.0.4/16`), ajan sürümü (`v0.4.14`), uzaktan donanım tanısı ve tek tıkla şube kilitleme eylemleri:
+
+<div align="center">
+  <img src="docs/assets/dashboard-fleet.jpg" alt="NetOpsWan Cihaz ve Şube Filosu Yönetimi" width="100%" />
+</div>
+
+### 2. Ağ Sağlığı ve Canlı Telemetri
+Şube bazlı gecikme (latency), CPU/RAM yükü, anlık ICMP ping metrikleri ve agregasyonel WAN trafiği izleme:
+
+<div align="center">
+  <img src="docs/assets/dashboard-telemetry.jpg" alt="Ağ Sağlığı ve Canlı Telemetri" width="100%" />
+</div>
+
+### 3. Merkezi DHCP, DNS & IP Dağıtımı
+Kasa/POS terminali, NVR kamera, VoIP telefon ve şube yazıcıları için hazır şablonlarla tek tıkla IP havuzu ve statik lease tahsisi:
+
+<div align="center">
+  <img src="docs/assets/dashboard-dhcp-dns.jpg" alt="Merkezi DHCP, DNS ve IP Dağıtımı" width="100%" />
+</div>
+
+### 4. Güvenlik Duvarı, Zero-Trust NAC ve Filtreleme
+Şube yerel ağındaki cihazların (IP kamera, PC vb.) switch arkasında MAC seviyesinde denetimi; tek tıkla karantinaya alma ve politika uygulama:
+
+<div align="center">
+  <img src="docs/assets/dashboard-firewall-nac.jpg" alt="Güvenlik Duvarı ve NAC Filtreleme" width="100%" />
+</div>
+
+### 5. Giriş ve Kimlik Doğrulama Portalı
+Merkezi kurumsal SD-WAN ağ geçidi ve güvenli operatör giriş konsolu:
+
+<div align="center">
+  <img src="docs/assets/dashboard-login.jpg" alt="NetOpsWan Giriş Portalı" width="100%" />
+</div>
 
 ## Mimari: nasıl çalışıyor?
 

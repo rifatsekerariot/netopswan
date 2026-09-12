@@ -75,3 +75,8 @@ open-design/
 !tools/meraki-mx64/payload/uboot*
 !tools/meraki-mx64/payload/*.ko
 !tools/meraki-mx64/payload/mtd*
+
+# Ham ekran görüntüleri (docs/assets altına kopyalanarak versiyonlanır)
+/Adsız*.jpg
+/adsiz*.jpg
+
