@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Write(~/.claude/skills/**)",
+      "Edit(~/.claude/skills/**)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh issue view *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(rg *)"
+    ]
+  },
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true
+  }
+}

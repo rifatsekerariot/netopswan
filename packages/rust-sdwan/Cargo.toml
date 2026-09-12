@@ -1,0 +1,34 @@
+[workspace]
+members = [
+    "crates/netops-proto",
+    "crates/netops-ipam",
+    "crates/netops-auth",
+    "crates/netops-command",
+    "crates/netops-ota",
+    "crates/netops-agent",
+    "crates/netops-hub",
+]
+resolver = "2"
+
+# MSRV-001 DÜZELTMESİ: hiçbir crate `rust-version` beyan etmiyordu ve hiçbir
+# `rust-toolchain.toml` yoktu - cargo, geliştiricinin/CI'ın gerçekte hangi minimum
+# derleyici sürümüyle uyumlu olduğunu asla doğrulayamıyordu (sessiz sürüm kayması
+# riski). Tek kaynaktan (workspace) devralınır - bkz. her crate'teki
+# `rust-version.workspace = true`.
+[workspace.package]
+rust-version = "1.90"
+
+# CARGOLINT-001 DÜZELTMESİ: `unsafe_code = "forbid"` yoktu; bu workspace şu an
+# tamamen `unsafe`-free (bkz. rust-review taraması, has_unsafe=false) ama bu
+# garantiyi zorunlu kılan hiçbir derleyici seviyesi kontrol yoktu - ileride
+# fark edilmeden bir `unsafe` bloğu eklenebilirdi. Sıfır maliyetli bir
+# donanım (hardening) önlemi. Her crate `[lints] workspace = true` ile devralır.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[profile.release]
+opt-level = "z"     # Optimize for smallest binary size
+lto = true          # Link-Time Optimization
+codegen-units = 1   # Maximum size reduction
+panic = "abort"     # Remove panic unwinding overhead
+strip = true        # Strip symbols from binary

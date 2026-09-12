@@ -1,0 +1,32 @@
+[package]
+name = "netops-agent"
+version = "0.4.14"
+edition = "2021"
+rust-version.workspace = true
+description = "Lightweight, memory-safe SD-WAN edge agent for Cisco Meraki MX64"
+
+[lints]
+workspace = true
+
+[dependencies]
+netops-proto = { path = "../netops-proto" }
+netops-auth = { path = "../netops-auth" }
+netops-ota = { path = "../netops-ota" }
+netops-ipam = { path = "../netops-ipam" }
+tokio = { version = "1.43", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "2.0"
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+sysinfo = { version = "0.33", default-features = false, features = ["system"] }
+surge-ping = "0.8"
+backoff = { version = "0.4", features = ["tokio"] }
+socket2 = "0.6"
+ipnet = "2.12"
+local-ip-address = "0.6"
+smallvec = { version = "1.13", features = ["serde"] }
+bytes = "1.10"

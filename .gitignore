@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Logs
+# NOT (2026-08-22): Önceden başında `/` olmadan `logs/` idi - bu, git'te HERHANGİ bir
+# derinlikte "logs" adlı klasörü (kökteki gerçek log dizini DEĞİL, örn.
+# frontend/src/app/api/logs/ gibi bir Next.js API route'unu bile) sessizce dışlıyordu.
+# `/api/logs/route.ts` bu yüzden repo'ya HİÇ commit edilmemişti. Artık sadece proje
+# kökündeki `logs/` dizinini hedefliyor.
+/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment Variables & Secrets
+.env
+.env*.local
+.env.local
+.env.production
+.env.development
+*.pem
+*.key
+*.crt
+
+# OS and Editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary / Scratch files
+*.tsbuildinfo
+next-env.d.ts
+.clerk/
+.vercel/
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Rust build target
+target/
+packages/rust-sdwan/target/
+
+# Firmware build çıktıları (cihaza özel anahtar/isim içerir, asla commit edilmemeli)
+firmware_builder/build_tmp/
+firmware_builder/outputs/
+
+# Kod inceleme/analiz araçlarının geçici çıktıları
+.rust-review-results/
+
+# Bu proje dizinine yanlışlıkla kopyalanmış/klonlanmış olabilecek, NetOpsWan'a
+# ait OLMAYAN bağımsız depolar
+open-design/
+
+# Allow hardware firmware binaries in tools/meraki-mx64/payload
+!tools/meraki-mx64/payload/*.bin
+!tools/meraki-mx64/payload/uboot*
+!tools/meraki-mx64/payload/*.ko
+!tools/meraki-mx64/payload/mtd*

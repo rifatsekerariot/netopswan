@@ -1,0 +1,16 @@
+[package]
+name = "netops-ipam"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "High-performance bitwise IPAM, CIDR and overlap detection module for NetOpsWan"
+
+[lints]
+workspace = true
+
+[dependencies]
+ipnet = "2.12"
+indexmap = { version = "2.7", features = ["serde"] }
+smallvec = { version = "1.13", features = ["serde"] }
+thiserror = "2.0"
+serde = { version = "1.0", features = ["derive"] }

@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-22T16:56:32Z",
+  "title": "Design System: NetOpsWan",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "oklch(0 0 0)",
+        "tonalRamp": [
+          "oklch(0.05 0 0)",
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.4 0 0)",
+          "oklch(0.55 0 0)",
+          "oklch(0.7 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.99 0 0)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(0.99 0 0)",
+        "tonalRamp": [
+          "oklch(0.99 0 0)",
+          "oklch(0.97 0 0)",
+          "oklch(0.94 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.7 0 0)",
+          "oklch(0.5 0 0)",
+          "oklch(0.3 0 0)",
+          "oklch(0 0 0)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "oklch(1 0 0)"
+      },
+      "veil": {
+        "role": "neutral",
+        "displayName": "Veil",
+        "canonical": "oklch(0.94 0 0)"
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "oklch(0.97 0 0)"
+      },
+      "steel": {
+        "role": "neutral",
+        "displayName": "Steel",
+        "canonical": "oklch(0.44 0 0)"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(0.92 0 0)"
+      },
+      "alert": {
+        "role": "status",
+        "displayName": "Alert (Critical)",
+        "canonical": "oklch(0.63 0.19 23.03)"
+      },
+      "status-online": {
+        "role": "status",
+        "displayName": "Status Online (Emerald)",
+        "canonical": "#10b981"
+      },
+      "status-warning": {
+        "role": "status",
+        "displayName": "Status Warning (Amber)",
+        "canonical": "#f59e0b"
+      },
+      "status-info": {
+        "role": "status",
+        "displayName": "Status Info / Chart RX (Sky)",
+        "canonical": "#0ea5e9"
+      },
+      "status-secondary-series": {
+        "role": "status",
+        "displayName": "Chart TX (Violet)",
+        "canonical": "#8b5cf6"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles via PageContainer's pageTitle prop only."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions, table cells, form values."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase table headers and field labels, always with muted-foreground."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Every runtime number, IP, MAC, hostname, timestamp; paired with tabular-nums."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Dense sub-labels inside cards/nodes/tables (interface names, captions) where body text is too loud."
+      }
+    },
+    "shadows": [
+      {
+        "name": "modal-shadow",
+        "value": "shadow-2xl",
+        "purpose": "Modals/dialogs only - the sole layer allowed a real drop shadow, since it must separate from the whole page."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition-standard",
+        "value": "transition-colors / transition-all, ~150-200ms implicit (Tailwind default)",
+        "purpose": "Hover and focus state changes on buttons, tabs, and table rows."
+      },
+      {
+        "name": "press-scale",
+        "value": "active:scale-[0.98]",
+        "purpose": "Physical press feedback on buttons and icon controls."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call-to-action: apply config, send command, confirm.",
+      "html": "<button class=\"ds-btn-primary\">Yap\u0131land\u0131rmay\u0131 g\u00f6nder</button>",
+      "css": ".ds-btn-primary { background: #000000; color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: 700; border: none; transition: background-color 0.15s, transform 0.1s; } .ds-btn-primary:hover { background: rgba(0,0,0,0.9); } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid #000000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost / Secondary Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action sitting next to a primary button (e.g. cancel, define device).",
+      "html": "<button class=\"ds-btn-ghost\">\u0130ptal</button>",
+      "css": ".ds-btn-ghost { background: #f0f0f0; color: #000000; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1px solid #ebebeb; transition: background-color 0.15s; } .ds-btn-ghost:hover { background: #e0e0e0; } .ds-btn-ghost:focus-visible { outline: 2px solid #000000; outline-offset: 2px; }"
+    },
+    {
+      "name": "KPI Row",
+      "kind": "custom",
+      "refersTo": "kpi-row",
+      "description": "Signature dense status-line component: dot + icon + label + right-aligned mono value + caption. Replaces equal metric-card grids across every overview-style page.",
+      "html": "<div class=\"ds-kpi-row\"><span class=\"ds-kpi-dot\"></span><svg class=\"ds-kpi-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M12 2 2 7l10 5 10-5-10-5Z\"/><path d=\"m2 17 10 5 10-5M2 12l10 5 10-5\"/></svg><div class=\"ds-kpi-label\">Toplam \u015fube</div><div class=\"ds-kpi-values\"><span class=\"ds-kpi-value\">128</span><div class=\"ds-kpi-caption\">kay\u0131tl\u0131 cihaz</div></div></div>",
+      "css": ".ds-kpi-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #ebebeb; font-family: Geist, sans-serif; } .ds-kpi-dot { width: 6px; height: 6px; border-radius: 999px; background: #000000; flex-shrink: 0; } .ds-kpi-icon { width: 14px; height: 14px; color: #000000; opacity: 0.8; flex-shrink: 0; } .ds-kpi-label { flex: 1; font-size: 11px; color: #707070; } .ds-kpi-values { text-align: right; } .ds-kpi-value { font-family: 'Geist Mono', monospace; font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; } .ds-kpi-caption { font-size: 10px; color: #707070; }"
+    },
+    {
+      "name": "Status Dot + Label",
+      "kind": "chip",
+      "refersTo": "status-indicator",
+      "description": "The only way device/connection state is shown in tables and lists - never a colored pill background.",
+      "html": "<span class=\"ds-status\"><span class=\"ds-status-dot ds-status-online\"></span>\u00e7evrimi\u00e7i</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; font-family: Geist, sans-serif; } .ds-status-dot { width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0; } .ds-status-online { background: #10b981; } .ds-status-warning { background: #f59e0b; } .ds-status-offline { background: oklch(0.63 0.19 23.03); }"
+    },
+    {
+      "name": "Data Table",
+      "kind": "custom",
+      "refersTo": "table",
+      "description": "Dense operational table: muted uppercase header, hairline row dividers, hover highlight.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>\u015eube ad\u0131</th><th>Durum</th></tr></thead><tbody><tr><td>Kad\u0131k\u00f6y \u015eube</td><td><span class=\"ds-status\"><span class=\"ds-status-dot ds-status-online\"></span>\u00e7evrimi\u00e7i</span></td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; text-align: left; font-size: 12px; font-family: Geist, sans-serif; border-collapse: collapse; } .ds-table thead tr { background: #f7f7f7; color: #707070; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; font-weight: 700; border-bottom: 1px solid #ebebeb; } .ds-table th, .ds-table td { padding: 12px 16px; } .ds-table tbody tr { border-bottom: 1px solid rgba(235,235,235,0.5); transition: background-color 0.15s; } .ds-table tbody tr:hover { background: rgba(240,240,240,0.4); }"
+    },
+    {
+      "name": "Card Panel",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The base page-level container: flat, bordered, no shadow.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Filo durumu</h3><p class=\"ds-card-body\">\u0130\u00e7erik buraya gelir.</p></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #ebebeb; border-radius: 16px; padding: 20px; font-family: Geist, sans-serif; } .ds-card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; } .ds-card-body { font-size: 14px; color: #707070; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Field Technician's Console",
+    "overview": "NetOpsWan is what a network operator opens when a branch office's connection is degraded and they need the answer in seconds, not an aesthetic experience to admire. The system commits to a near-total monochrome base \u2014 pure black ink on near-white paper, one grayscale ramp for every surface and border \u2014 so that the only colors ever visible on screen are load-bearing signals: emerald for healthy, amber for attention, red for critical, sky/violet reserved for the two series of a traffic chart. Nothing decorative competes with that signal. This is deliberately unglamorous: dense data, mono-spaced numbers, short Turkish labels, and tables that scan fast under fluorescent light, not marketing gloss. It targets, and is explicitly judged against, the operational quality bar of a commercial SD-WAN console (Meraki-class), while looking nothing like a SaaS marketing site.",
+    "keyCharacteristics": [
+      "Monochrome-first: black/white/gray is the entire base palette; every other color is a status signal, never decoration.",
+      "Flat, bordered surfaces \u2014 depth comes from a 1px hairline and a muted-tint background shift, not shadows.",
+      "Dense, list-like KPI rows instead of grids of equal cards.",
+      "Every numeric value is monospaced and uses tabular-nums.",
+      "Turkish-first copy; sentence case, no marketing adjectives."
+    ],
+    "rules": [
+      {
+        "name": "The One Signal Rule",
+        "body": "Color exists only to report device/connection/security state. If a color doesn't map to online/warning/critical/info, it doesn't belong on screen. A status dot plus a matching icon tint is the standard way to say it \u2014 never a colored card background.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Truth Rule",
+        "body": "Any number that can change at runtime (CPU %, RTT, byte counters, uptime) is rendered in Geist Mono with tabular-nums. A static label never is.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border-Not-Shadow Rule",
+        "body": "Card separation is a 1px hairline border plus a one-step background shift. Reach for box-shadow only on floating/overlay layers (modals, dropdowns) that sit above the whole page, never on inline panels.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do put every runtime-changing number in Geist Mono with tabular-nums.",
+      "Do use the five status colors (emerald/amber/red/sky/violet) exclusively for state \u2014 device health, log severity, chart series \u2014 never as page decoration.",
+      "Do use a dense KpiRow list instead of a row of three or four equal metric cards.",
+      "Do give every interactive element a visible focus-visible ring and an active:scale-[0.98] press state.",
+      "Do replace loading spinners with skeleton blocks shaped like the real content."
+    ],
+    "donts": [
+      "Don't introduce a second accent hue outside the five status colors, even for \"branding.\"",
+      "Don't use box-shadow on an inline page panel \u2014 depth comes from the border + background-tint pairing only (modals/dropdowns are the sole exception).",
+      "Don't write a manual <h1> page header \u2014 always route the title through PageContainer's pageTitle/pageDescription/pageHeaderAction props so every page's header matches.",
+      "Don't use marketing adjectives or exclamation points in status/error copy; Turkish, direct, sentence case."
+    ]
+  }
+}

@@ -1,0 +1,131 @@
+<svg viewBox="0 0 1200 627" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05070d"/>
+      <stop offset="55%" stop-color="#0a0f1e"/>
+      <stop offset="100%" stop-color="#0d1424"/>
+    </linearGradient>
+    <linearGradient id="redGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff2b3d"/>
+      <stop offset="100%" stop-color="#ff6a3d"/>
+    </linearGradient>
+    <radialGradient id="pcbGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a3a6b" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#1a3a6b" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1c2740" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="627" fill="url(#bg)"/>
+  <rect width="1200" height="627" fill="url(#grid)" opacity="0.35"/>
+  <circle cx="820" cy="300" r="330" fill="url(#pcbGlow)"/>
+
+  <!-- Sol üst kişi etiketi -->
+  <text x="46" y="52" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#e9edf5" letter-spacing="0.5">RİFAT ŞEKER | Gömülü Sistemler</text>
+  <rect x="44" y="66" width="330" height="30" rx="4" fill="#12182b" stroke="#2a3a5c" stroke-width="1"/>
+  <text x="54" y="87" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#ff3b4e">RİFAT ŞEKER: Gömülü AI</text>
+
+  <!-- Sağ üst bölüm rozeti -->
+  <g transform="translate(1000,30)">
+    <rect x="0" y="0" width="160" height="70" rx="6" fill="#ff2b3d"/>
+    <text x="80" y="26" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="1">BÖLÜM</text>
+    <text x="80" y="58" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="900" fill="#ffffff" text-anchor="middle">3</text>
+  </g>
+  <text x="1160" y="118" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#8b96b3" text-anchor="end">2026</text>
+
+  <!-- Stilize devre kartı / router grafiği (sağ orta) -->
+  <g transform="translate(660,150)">
+    <rect x="0" y="0" width="430" height="260" rx="18" fill="#0b1120" stroke="#22314f" stroke-width="2"/>
+    <rect x="18" y="18" width="394" height="224" rx="10" fill="#0e1626" stroke="#1c2740" stroke-width="1"/>
+
+    <!-- devre izleri -->
+    <g stroke="#2c5fa8" stroke-width="2" fill="none" opacity="0.85">
+      <path d="M40 60 H160 V100 H260"/>
+      <path d="M40 130 H120 V180 H220 V210"/>
+      <path d="M300 50 V120 H380"/>
+      <path d="M340 160 H390 V220"/>
+      <path d="M60 200 H100 V230"/>
+    </g>
+    <g fill="#4fa3ff">
+      <circle cx="40" cy="60" r="4"/>
+      <circle cx="160" cy="60" r="4"/>
+      <circle cx="260" cy="100" r="4"/>
+      <circle cx="120" cy="130" r="4"/>
+      <circle cx="220" cy="180" r="4"/>
+      <circle cx="300" cy="50" r="4"/>
+      <circle cx="380" cy="120" r="4"/>
+      <circle cx="390" cy="220" r="4"/>
+    </g>
+
+    <!-- merkez çip / WireGuard node -->
+    <rect x="150" y="90" width="120" height="90" rx="8" fill="#111a2e" stroke="#ff3b4e" stroke-width="2"/>
+    <circle cx="210" cy="135" r="26" fill="none" stroke="#ff3b4e" stroke-width="3"/>
+    <circle cx="210" cy="135" r="8" fill="#ff3b4e"/>
+    <text x="210" y="205" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#8b96b3" text-anchor="middle" letter-spacing="1">SD-WAN AGENT</text>
+
+    <!-- portlar -->
+    <g fill="#4fa3ff">
+      <rect x="16" y="235" width="18" height="10" rx="2"/>
+      <rect x="40" y="235" width="18" height="10" rx="2"/>
+      <rect x="64" y="235" width="18" height="10" rx="2"/>
+      <rect x="352" y="235" width="18" height="10" rx="2"/>
+      <rect x="376" y="235" width="18" height="10" rx="2"/>
+    </g>
+  </g>
+
+  <!-- kod paneli (sol üst, glassmorphism) -->
+  <g transform="translate(60,140)" opacity="0.92">
+    <rect width="300" height="150" rx="10" fill="#0d1424" stroke="#25335a" stroke-width="1.5"/>
+    <circle cx="18" cy="18" r="5" fill="#ff5f56"/>
+    <circle cx="36" cy="18" r="5" fill="#ffbd2e"/>
+    <circle cx="54" cy="18" r="5" fill="#27c93f"/>
+    <g font-family="Menlo, Consolas, monospace" font-size="11" fill="#7fb3ff">
+      <text x="16" y="44">fn watchdog_loop() {</text>
+      <text x="30" y="62" fill="#9adf9a">heartbeat.store(now());</text>
+      <text x="30" y="80" fill="#e9edf5">if stalled { restart(); }</text>
+      <text x="16" y="98">}</text>
+      <text x="16" y="122" fill="#ff8080">// panic = abort ⚠</text>
+    </g>
+  </g>
+
+  <!-- akış şeması paneli (sol alt) -->
+  <g transform="translate(60,320)" opacity="0.92">
+    <rect width="300" height="130" rx="10" fill="#0d1424" stroke="#25335a" stroke-width="1.5"/>
+    <g font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#c7d0e6" text-anchor="middle">
+      <rect x="20" y="16" width="70" height="26" rx="5" fill="#152036" stroke="#3a4a72"/>
+      <text x="55" y="33">Analiz</text>
+      <rect x="115" y="16" width="70" height="26" rx="5" fill="#152036" stroke="#3a4a72"/>
+      <text x="150" y="33">Strateji</text>
+      <rect x="210" y="16" width="70" height="26" rx="5" fill="#152036" stroke="#3a4a72"/>
+      <text x="245" y="33">Karar</text>
+      <rect x="20" y="60" width="70" height="26" rx="5" fill="#152036" stroke="#3a4a72"/>
+      <text x="55" y="77">Uygulama</text>
+      <rect x="115" y="60" width="70" height="26" rx="5" fill="#ff2b3d" stroke="#ff6a6a"/>
+      <text x="150" y="77" fill="#fff">Tehlike</text>
+      <rect x="210" y="60" width="70" height="26" rx="5" fill="#152036" stroke="#3a4a72"/>
+      <text x="245" y="77">İzleme</text>
+    </g>
+    <g stroke="#3a4a72" stroke-width="1.5" fill="none">
+      <path d="M90 29 H115"/>
+      <path d="M185 29 H210"/>
+      <path d="M55 42 V60"/>
+      <path d="M150 42 V60"/>
+      <path d="M245 42 V60"/>
+    </g>
+  </g>
+
+  <!-- Başlık bloğu -->
+  <g transform="translate(60,470)">
+    <text x="0" y="0" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="900" fill="#ffffff" letter-spacing="1">YAPAY ZEKA ÇIKTI</text>
+    <text x="0" y="72" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="900" fill="url(#redGlow)" letter-spacing="1">MERTLİK BOZULDU 3</text>
+    <rect x="4" y="96" width="640" height="34" fill="#ff2b3d"/>
+    <text x="14" y="120" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#0a0e1a" letter-spacing="1">GÖMÜLÜ SİSTEMLERİN GELECEĞİ VE TEHLİKE</text>
+  </g>
+
+  <rect x="0" y="0" width="1200" height="627" fill="none" stroke="#1c2740" stroke-width="2"/>
+</svg>

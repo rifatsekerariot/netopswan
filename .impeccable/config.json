@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "9px",
+        "createdAt": "2026-08-22T17:05:58.835Z",
+        "reason": "part of the documented Micro typography step (9-11px), added to DESIGN.md this session"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "createdAt": "2026-08-22T17:06:06.837Z",
+        "reason": "part of the documented Micro typography step (9-11px), added to DESIGN.md this session"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "11px",
+        "createdAt": "2026-08-22T17:06:06.880Z",
+        "reason": "matches the documented Label typography step (0.6875rem=11px) in DESIGN.md"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "/Users/rifatseker/Desktop/ANTIGRAVITY/yangin/static/css/style.css"
+        ],
+        "createdAt": "2026-08-22T21:00:07.993Z",
+        "reason": "Left-rail color on .console-alert-ok/.console-alert-critical is a functional NFPA-style severity indicator on the fire-alarm status block (green=normal, red=critical), not a decorative product-card accent — matches domain convention (Grafana/PagerDuty alert panels)."
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "rounded-t-sm",
+        "files": [
+          "frontend/src/components/DeviceDetailModal.tsx"
+        ],
+        "createdAt": "2026-08-24T07:13:05.931Z",
+        "reason": "underline-style tab pattern (border-b-2 bottom accent + tiny top-corner rounding for focus ring), matches DESIGN.md's documented Section Tabs pattern used identically on topology page; not a full rounded-card border"
+      }
+    ]
+  }
+}

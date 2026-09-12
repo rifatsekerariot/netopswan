@@ -1,0 +1,11 @@
+# NetOpsWan SD-WAN Rust Derleme ve Hedef Mimarisi Yapılandırması
+
+[target.armv7-unknown-linux-musleabi]
+linker = "arm-linux-gnueabi-gcc"
+rustflags = ["-C", "target-cpu=cortex-a9"]
+
+[target.armv7-unknown-linux-musleabihf]
+linker = "arm-linux-gnueabihf-gcc"
+
+[target.x86_64-unknown-linux-musl]
+linker = "musl-gcc"

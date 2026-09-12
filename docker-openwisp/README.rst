@@ -1,0 +1,25 @@
+Docker-OpenWISP
+===============
+
+.. image:: https://github.com/openwisp/docker-openwisp/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/openwisp/docker-openwisp/actions/workflows/ci.yml
+
+.. image:: https://img.shields.io/badge/registry-openwisp-blue.svg
+    :target: https://gitlab.com/openwisp/docker-openwisp/container_registry
+
+.. image:: https://img.shields.io/badge/support-orange.svg
+    :target: http://openwisp.org/support/
+
+This repository contains official docker images of OpenWISP. Designed with
+horizontal scaling, easily replicable deployments and user customization
+in mind.
+
+.. image:: https://raw.githubusercontent.com/openwisp/docker-openwisp/master/docs/images/portainer-docker-list.png
+    :target: https://raw.githubusercontent.com/openwisp/docker-openwisp/master/docs/images/portainer-docker-list.png
+
+Documentation
+-------------
+
+- `Usage documentation <https://openwisp.io/docs/stable/docker/>`_
+- `Developer documentation
+  <https://openwisp.io/docs/stable/docker/developer/instructions.html>`_

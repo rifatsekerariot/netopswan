@@ -1,0 +1,58 @@
+/dts-v1/;
+
+/ {
+	description = "ARM OpenWrt FIT (Flattened Image Tree)";
+	#address-cells = <1>;
+
+	images {
+		kernel@1 {
+			description = "ARM OpenWrt Linux-5.15.150";
+			data = /incbin/("/builder/shared-workdir/build/build_dir/target-arm_cortex-a9_musl_eabi/linux-bcm53xx_generic/meraki_mr32-kernel.bin");
+			type = "kernel";
+			arch = "arm";
+			os = "linux";
+			compression = "none";
+			load = <0x00008000>;
+			entry = <0x00008000>;
+			hash@1 {
+				algo = "crc32";
+			};
+			hash@2 {
+				algo = "sha1";
+			};
+		};
+
+
+		fdt@2 {
+			description = "ARM OpenWrt meraki_mr32 device tree blob";
+			
+			data = /incbin/("/builder/shared-workdir/build/build_dir/target-arm_cortex-a9_musl_eabi/linux-bcm53xx_generic/linux-5.15.150/arch/arm/boot/dts/bcm53016-meraki-mr32.dtb");
+			type = "flat_dt";
+			
+			arch = "arm";
+			compression = "none";
+			hash@1 {
+				algo = "crc32";
+			};
+			hash@2 {
+				algo = "sha1";
+			};
+		};
+
+
+
+	};
+
+	configurations {
+		default = "config@1";
+		config@1 {
+			description = "OpenWrt meraki_mr32";
+			kernel = "kernel@1";
+			fdt = "fdt@2";
+			
+			
+			
+		};
+		
+	};
+};

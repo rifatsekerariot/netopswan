@@ -1,0 +1,17 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary build folders and outputs
+build_tmp/
+outputs/*.bin
+outputs/*.img
+batch_outputs/*.tar.gz
+batch_outputs/*.bin
+
+# Logs and OS files
+*.log
+.DS_Store
+.vscode/
+.idea/

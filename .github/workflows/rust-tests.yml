@@ -1,0 +1,47 @@
+name: Rust Test Suite (netops-hub, netops-agent, netops-*)
+
+# Faz 0 - Test Altyapısı: bu oturumdan önce netops-hub ve netops-agent değişiklikleri
+# SADECE production'da SSH ile elle doğrulanabiliyordu. Artık her push/PR'da tüm
+# workspace testleri (11+ regresyon testi dahil - örn. kamera oturumu sayacındaki
+# gerçek yanlış-pozitif hatasının bir daha asla geri dönmemesini garanti eden test)
+# otomatik çalışır; kırmızı test = merge edilemez.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/rust-sdwan/**'
+      - '.github/workflows/rust-tests.yml'
+  pull_request:
+    paths:
+      - 'packages/rust-sdwan/**'
+      - '.github/workflows/rust-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/rust-sdwan
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain kur
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            packages/rust-sdwan/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('packages/rust-sdwan/Cargo.lock') }}
+
+      - name: cargo test --workspace
+        run: cargo test --workspace --verbose
+
+      - name: cargo clippy (uyarı olarak, build'i kırmaz)
+        run: cargo clippy --workspace --all-targets || true

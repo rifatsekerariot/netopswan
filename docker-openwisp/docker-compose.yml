@@ -1,0 +1,221 @@
+x-celery-depends-on: &celery-depends-on
+  depends_on:
+    postgres:
+      condition: service_started
+    redis:
+      condition: service_started
+    dashboard:
+      condition: service_started
+    openvpn:
+      required: false
+      condition: service_healthy
+
+services:
+  dashboard:
+    image: openwisp/openwisp-dashboard:${OPENWISP_VERSION:-edge}
+    restart: always
+    build:
+      context: images
+      dockerfile: openwisp_dashboard/Dockerfile
+      args:
+        DASHBOARD_APP_PORT: 8000
+        OPENWISP_VERSION: ${OPENWISP_VERSION:-edge}
+    env_file:
+      - .env
+    volumes:
+      - openwisp_static:/opt/openwisp/static
+      - openwisp_media:/opt/openwisp/media
+      - openwisp_private_storage:/opt/openwisp/private
+      - openwisp_ssh:/home/openwisp/.ssh
+      - influxdb_data:/var/lib/influxdb
+      - ./customization/configuration/django/:/opt/openwisp/openwisp/configuration:ro
+      - ./customization/theme:/opt/openwisp/static_custom:ro
+    depends_on:
+      - postgres
+      - redis
+      - postfix
+      - influxdb
+
+  api:
+    image: openwisp/openwisp-api:${OPENWISP_VERSION:-edge}
+    restart: always
+    build:
+      context: images
+      dockerfile: openwisp_api/Dockerfile
+      args:
+        API_APP_PORT: 8001
+        OPENWISP_VERSION: ${OPENWISP_VERSION:-edge}
+    env_file:
+      - .env
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+      - openwisp_media:/opt/openwisp/media
+      - openwisp_private_storage:/opt/openwisp/private
+      - ./customization/configuration/django/:/opt/openwisp/openwisp/configuration:ro
+    depends_on:
+      - postgres
+      - redis
+      - dashboard
+
+  websocket:
+    image: openwisp/openwisp-websocket:${OPENWISP_VERSION:-edge}
+    restart: always
+    build:
+      context: images
+      dockerfile: openwisp_websocket/Dockerfile
+      args:
+        WEBSOCKET_APP_PORT: 8002
+        OPENWISP_VERSION: ${OPENWISP_VERSION:-edge}
+    env_file:
+      - .env
+    volumes:
+      - ./customization/configuration/django/:/opt/openwisp/openwisp/configuration:ro
+    depends_on:
+      - dashboard
+
+  celery:
+    image: openwisp/openwisp-dashboard:${OPENWISP_VERSION:-edge}
+    restart: always
+    environment:
+      - MODULE_NAME=celery
+    volumes:
+      - openwisp_media:/opt/openwisp/media
+      - openwisp_private_storage:/opt/openwisp/private
+      - openwisp_ssh:/home/openwisp/.ssh
+      - ./customization/configuration/django/:/opt/openwisp/openwisp/configuration:ro
+    env_file:
+      - .env
+    <<: *celery-depends-on
+    network_mode: "${CELERY_SERVICE_NETWORK_MODE-service:openvpn}"
+
+  celery_monitoring:
+    image: openwisp/openwisp-dashboard:${OPENWISP_VERSION:-edge}
+    restart: always
+    environment:
+      - MODULE_NAME=celery_monitoring
+    volumes:
+      - openwisp_media:/opt/openwisp/media
+      - openwisp_private_storage:/opt/openwisp/private
+      - ./customization/configuration/django/:/opt/openwisp/openwisp/configuration:ro
+    env_file:
+      - .env
+    <<: *celery-depends-on
+    network_mode: "${CELERY_SERVICE_NETWORK_MODE-service:openvpn}"
+
+  celerybeat:
+    image: openwisp/openwisp-dashboard:${OPENWISP_VERSION:-edge}
+    restart: always
+    environment:
+      - MODULE_NAME=celerybeat
+    env_file:
+      - .env
+    volumes:
+      - ./customization/configuration/django/:/opt/openwisp/openwisp/configuration:ro
+    depends_on:
+      - postgres
+      - redis
+      - dashboard
+
+  nginx:
+    image: openwisp/openwisp-nginx:${OPENWISP_VERSION:-edge}
+    restart: always
+    build:
+      context: images
+      dockerfile: openwisp_nginx/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - openwisp_static:/opt/openwisp/public/static:ro
+      - openwisp_media:/opt/openwisp/public/media:ro
+      - openwisp_private_storage:/opt/openwisp/public/private:ro
+      - openwisp_certs:/etc/letsencrypt
+      - ./customization/nginx:/opt/openwisp/public/custom:ro
+    networks:
+      default:
+        aliases:
+          - dashboard.internal
+          - api.internal
+    ports:
+      - "8081:80"
+      - "8443:443"
+    depends_on:
+      - dashboard
+      - api
+      - websocket
+
+  postfix:
+    image: openwisp/openwisp-postfix:${OPENWISP_VERSION:-edge}
+    restart: always
+    build:
+      context: images
+      dockerfile: openwisp_postfix/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - openwisp_certs:/etc/ssl/mail
+
+  openvpn:
+    image: openwisp/openwisp-openvpn:${OPENWISP_VERSION:-edge}
+    restart: on-failure
+    build:
+      context: images
+      dockerfile: openwisp_openvpn/Dockerfile
+    ports:
+      - "1194:1194/udp"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "openvpn"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=$DB_NAME
+      - POSTGRES_USER=$DB_USER
+      - POSTGRES_PASSWORD=$DB_PASS
+      - TZ=$TZ
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  influxdb:
+    image: influxdb:1.8-alpine
+    restart: always
+    environment:
+      - INFLUXDB_DB=$INFLUXDB_NAME
+      - INFLUXDB_USER=$INFLUXDB_USER
+      - INFLUXDB_USER_PASSWORD=$INFLUXDB_PASS
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+
+  redis:
+    image: redis:alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+
+volumes:
+  influxdb_data: {}
+  postgres_data: {}
+  redis_data: {}
+  openwisp_certs: {}
+  openwisp_ssh: {}
+  openwisp_media: {}
+  openwisp_static: {}
+  openwisp_private_storage: {}
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16

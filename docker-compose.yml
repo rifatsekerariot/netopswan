@@ -1,0 +1,236 @@
+version: '3.8'
+
+# Ortak Bağımlılık Şablonu
+x-celery-depends-on: &celery-depends-on
+  depends_on:
+    postgres:
+      condition: service_started
+    redis:
+      condition: service_started
+    dashboard:
+      condition: service_started
+    openvpn:
+      required: false
+      condition: service_healthy
+
+services:
+  # ============================================================================
+  # 1. MERKEZİ GÜVENLİ TERS VEKİL (NGINX GATEWAY - 80 / 443 Standart Portlar)
+  # (3000 portu dışarıya asla açılmaz, tüm trafik bu güvenli ağ geçidinden geçer)
+  # ============================================================================
+  gateway:
+    image: nginx:alpine
+    container_name: netopswan-gateway
+    restart: always
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/gateway.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - netopswan-panel
+      - openwisp_nginx
+    networks:
+      - sdwan-net
+
+  # ============================================================================
+  # 2. NETOPSWAN KURUMSAL SD-WAN YÖNETİM PANELİ (Dahili Port: 3000, Dışa Kapalı)
+  # ============================================================================
+  netopswan-panel:
+    image: ghcr.io/rifatsekerariot/netopswan:latest
+    container_name: netopswan-panel
+    restart: always
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+      - OPENWISP_API_TOKEN=${OPENWISP_API_TOKEN:-3524d06794c7b25f20da8ea3183a3b6edde79b7f}
+      - OPENWISP_API_HOST=${OPENWISP_API_HOST:-api.openwisp.org}
+      - OPENWISP_INTERNAL_HOST=openwisp_nginx
+      - OPENWISP_PORT=443
+    depends_on:
+      - openwisp_nginx
+    networks:
+      - sdwan-net
+
+  # ============================================================================
+  # 3. OPENWISP SD-WAN ÇEKİRDEK SERVİSLERİ (Dahili Portlar, Dışa Kapalı)
+  # ============================================================================
+  openwisp_nginx:
+    image: openwisp/openwisp-nginx:${OPENWISP_VERSION:-edge}
+    container_name: openwisp_nginx
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - openwisp_static:/opt/openwisp/public/static:ro
+      - openwisp_media:/opt/openwisp/public/media:ro
+      - openwisp_certs:/etc/letsencrypt
+    expose:
+      - "80"
+      - "443"
+    ports:
+      - "8443:443"
+    networks:
+      sdwan-net:
+        aliases:
+          - dashboard.openwisp.org
+          - api.openwisp.org
+          - dashboard.internal
+          - api.internal
+          - openwisp_nginx
+    depends_on:
+      - dashboard
+      - api
+      - websocket
+
+  websocket:
+    image: openwisp/openwisp-websocket:${OPENWISP_VERSION:-edge}
+    container_name: openwisp_websocket
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - dashboard
+    networks:
+      - sdwan-net
+
+  dashboard:
+    image: openwisp/openwisp-dashboard:${OPENWISP_VERSION:-edge}
+    container_name: openwisp_dashboard
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - openwisp_static:/opt/openwisp/static
+      - openwisp_media:/opt/openwisp/media
+      - openwisp_private_storage:/opt/openwisp/private
+      - openwisp_ssh:/home/openwisp/.ssh
+      - influxdb_data:/var/lib/influxdb
+    depends_on:
+      - postgres
+      - redis
+      - influxdb
+    networks:
+      - sdwan-net
+
+  api:
+    image: openwisp/openwisp-api:${OPENWISP_VERSION:-edge}
+    container_name: openwisp_api
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+      - openwisp_media:/opt/openwisp/media
+      - openwisp_private_storage:/opt/openwisp/private
+    depends_on:
+      - postgres
+      - redis
+      - dashboard
+    networks:
+      - sdwan-net
+
+  # ============================================================================
+  # 4. ŞUBE VPN AĞ GEÇİDİ (Sadece Şubelerin Tünel Açtığı 1194 UDP Portu Açık)
+  # ============================================================================
+  openvpn:
+    image: openwisp/openwisp-openvpn:${OPENWISP_VERSION:-edge}
+    container_name: openwisp_openvpn
+    restart: on-failure
+    environment:
+      - MODULE_NAME=openvpn
+    ports:
+      - "1194:1194/udp"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - dashboard
+      - openwisp_nginx
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "openvpn"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+    networks:
+      - sdwan-net
+
+  # Celery Asenkron Görevler (Tünel Ağı Üzerinden Doğrudan Cihaza Erişir)
+  celery:
+    image: openwisp/openwisp-dashboard:${OPENWISP_VERSION:-edge}
+    container_name: openwisp_celery
+    restart: always
+    environment:
+      - MODULE_NAME=celery
+    env_file:
+      - .env
+    <<: *celery-depends-on
+    network_mode: "service:openvpn"
+
+  celery_monitoring:
+    image: openwisp/openwisp-dashboard:${OPENWISP_VERSION:-edge}
+    container_name: openwisp_celery_monitoring
+    restart: always
+    environment:
+      - MODULE_NAME=celery_monitoring
+    env_file:
+      - .env
+    <<: *celery-depends-on
+    network_mode: "service:openvpn"
+
+  # Veritabanı & Önbellek (Sadece Dahili Ağda, Dışarıya Tamamen Kapalı)
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: openwisp_postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME:-openwisp}
+      - POSTGRES_USER=${DB_USER:-admin}
+      - POSTGRES_PASSWORD=${DB_PASS:-admin}
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sdwan-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: openwisp_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - sdwan-net
+
+  influxdb:
+    image: influxdb:1.8-alpine
+    container_name: openwisp_influxdb
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    networks:
+      - sdwan-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  influxdb_data:
+  openwisp_static:
+  openwisp_media:
+  openwisp_private_storage:
+  openwisp_ssh:
+  openwisp_certs:
+
+networks:
+  sdwan-net:
+    name: sdwan-net
+    driver: bridge

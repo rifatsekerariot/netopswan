@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+
+echo ''
+echo 'Python file QA checks...'
+openwisp-qa-check --skip-checkmigrations --jslinter --csslinter
+
+echo ''
+echo 'Shell scripts QA checks ...'
+# check shell scripts formatting
+sh_files=$(shfmt -f .)
+shfmt -d .
+
+echo ''
+echo 'Dockerfile QA checks...'
+
+hadolint ./images/openwisp_freeradius/Dockerfile
+hadolint ./images/openwisp_nfs/Dockerfile
+hadolint ./images/openwisp_postfix/Dockerfile
+hadolint ./images/openwisp_base/Dockerfile
+hadolint ./images/openwisp_api/Dockerfile
+hadolint ./images/openwisp_dashboard/Dockerfile
+hadolint ./images/openwisp_nginx/Dockerfile
+hadolint ./images/openwisp_openvpn/Dockerfile
+hadolint ./images/openwisp_websocket/Dockerfile
