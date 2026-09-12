@@ -13,10 +13,12 @@ kendi Rust yazılımınızla çalıştırın — merkezi bir gösterge panelinde
 [![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)](packages/rust-sdwan)
 [![Next.js](https://img.shields.io/badge/Next.js%2016-000000?style=flat&logo=nextdotjs&logoColor=white)](frontend)
 [![WireGuard](https://img.shields.io/badge/WireGuard-88171A?style=flat&logo=wireguard&logoColor=white)](#mimari)
-[![OpenWrt](https://img.shields.io/badge/OpenWrt-00B5E2?style=flat&logo=openwrt&logoColor=white)](#şube-donanımı)
-[![License](https://img.shields.io/badge/License-belirtilmedi-lightgrey)](#lisans)
+[![OpenWrt](https://img.shields.io/badge/OpenWrt-00B5E2?style=flat&logo=openwrt&logoColor=white)](#şube-donanımı-cisco-meraki-mx64-dönüşümü)
+[![License: AGPL v3 + Commercial](https://img.shields.io/badge/License-AGPL_v3_%2B_Commercial-blue.svg)](LICENSE)
 
-<img src="docs/assets/linkedin-cover-bolum3.png" alt="Yapay Zeka Çıktı, Mertlik Bozuldu 3 — NetOpsWan" width="100%" />
+<img src="docs/assets/linkedin-cover-bolum3.png" alt="Yapay Zeka Çıktı, Mertlik Bozuldu 3 — NetOpsWan & Cisco Meraki MX64" width="100%" />
+
+<p align="center"><em><strong>YAPAY ZEKA ÇIKTI MERTLİK BOZULDU 3:</strong> NetOpsWan SD-WAN — Cisco Meraki MX64 cihazlarının stok bulut lisanslı firmware'i yerine kendi geliştirdiğimiz açık kaynak firmware ve otonom Rust ajan devrimi!</em></p>
 
 </div>
 
@@ -331,20 +333,110 @@ ortam değişkeni ile verilir — depoda hiçbir varsayılan/gerçek şifre
 > içindeki tüm değerler). Bir deponun geçmişte özel olması, geçmiş
 > commit'lerin hiçbir zaman görülmeyeceği anlamına gelmez.
 
-## Şube donanımı: Cisco Meraki MX64 dönüşümü
+## Şube donanımı: Cisco Meraki MX64 dönüşümü ve Agent Kurulumu
 
-1. `firmware_builder/build-firmware.sh` ile Meraki MX64 için özel bir
-   OpenWrt + `netops-agent` firmware imajı üretin (yerel LAN kurtarma
-   şifrenizi `SSH_PASSWORD` ortam değişkeni ile verin).
-2. `scripts/meraki_provisioner.sh --server <hub-url> --device-key
-   <paylaşılan-sır> --device-name <şube-adı>` ile cihazı uçtan uca
-   flaşlayıp ilk kaydını yaptırın.
-3. Cihaz ilk açılışta otomatik olarak hub'a kaydolur, bir WireGuard
-   tüneli kurar ve telemetri göndermeye başlar — dashboard'un **Filo**
-   sayfasında birkaç saniye içinde görünür.
+NetOpsWan, stok Cisco Meraki MX64 güvenlik cihazlarını (Broadcom BCM58625, Dual-Core ARM Cortex-A9, 2GB DDR3 RAM, 1GB NAND Flash) üretici bulut kilitlerinden kurtararak açık kaynaklı, otonom bir SD-WAN uç noktasına dönüştürmek için özel araçlar içerir.
 
-Donanım/güvenlik detayları için [`BLUEPRINT.md`](BLUEPRINT.md) dosyasına
-bakın.
+Bu otomasyon araçları `tools/meraki-mx64/` altında konumlandırılmıştır.
+
+```
+tools/meraki-mx64/
+├── mx64-tool              # Python tabanlı CLI yönetim ve otomasyon aracı
+├── mx64_tool/             # Otomatik tespit, flash ve tam yedekleme motoru
+├── scripts/               # Yardımcı bash scriptleri (IP değişimi, sysupgrade vb.)
+├── studio.py              # Web tabanlı Staging & Provisioning Studio
+└── backups/               # Orijinal stok Meraki flash yedekleri arşivi
+```
+
+### 1. Stok Cihazın TAM Flash Yedeğini Alma (`backup-full`)
+
+Cihaza herhangi bir müdahale yapmadan önce, stok Meraki bulut yazılımına ileride **orijinal haline dönebilmek** için tüm MTD flash bölümlerini (bootloader, kernel, rootfs, nvram) bilgisayarınıza yedekleyin:
+
+```bash
+cd tools/meraki-mx64
+./mx64-tool backup-full --iface <ethernet-arayuzu> --host-ip 192.168.1.2
+```
+
+- **%100 Salt-Okunur:** Cihaz üzerinde hiçbir şeyi silmez veya değiştirmez.
+- MTD haritasındaki tüm bölümleri (`orig_mtd0_boot.bin`, `orig_mtd3_nvram.bin` vb.) `backups/` dizinine adlandırılmış olarak indirir.
+
+### 2. Tek Komutla Otomatik Açık Kaynak Dönüşümü
+
+Cihazı sıfırlama (reset) butonuna basılı tutarak açıp Diag moduna (Telnet: `192.168.1.1:23`) aldıktan sonra sihirbazı çalıştırın:
+
+```bash
+sudo ./mx64-tool run
+```
+
+Bu sihirbaz sırasıyla:
+1. **Donanım ve SoC Revizyonunu Keşfeder:** Standart MX64 veya A0 revizyonunu otomatik ayırır.
+2. **U-Boot Flaşlar:** MTD yazma kilidini açıp açık kaynak `uboot_mx64` bootloader'ını yazar.
+3. **USB Bellek Hazırlar:** Clayface kararlı initramfs kernel'ını USB sürücüye yönlendirir.
+4. **Kalıcı OpenWrt Sysupgrade Yapar:** NAND Flash'a kalıcı OpenWrt işletim sistemini yazar ve cihazı `192.168.10.1/24` IP'siyle yeniden başlatır.
+
+### 3. Rust SD-WAN Ajanının (`netops-agent`) Kurulumu ve Servis Başlatma
+
+Cihaz kalıcı OpenWrt ile açıldıktan sonra yerel ağdan bağlanın:
+
+```bash
+# İlk kurulumda şifre boştur, direkt Enter'a basın:
+ssh root@192.168.10.1
+```
+
+Geliştirilen Rust ajanı ARMv7 için çapraz derlenip cihaza yüklenir:
+
+```bash
+# Bilgisayarınızda Rust ajanını çapraz derleyin:
+cd packages/rust-sdwan
+cross build --release --target armv7-unknown-linux-musleabi -p netops-agent
+
+# Binary'yi MX64 cihazına kopyalayın:
+scp target/armv7-unknown-linux-musleabi/release/netops-agent root@192.168.10.1:/usr/bin/netops-agent
+```
+
+Cihaz üzerinde Zero-Trust gizli anahtarını ve otomatik başlatma servisini tanımlayın:
+
+```sh
+# Cihaz terminalinde:
+chmod +x /usr/bin/netops-agent
+mkdir -p /etc/netops
+
+# Hub ile paylaşılan kök sırrı cihaza yazın:
+echo -n "<PAYLASILAN_ZERO_TRUST_SIRRI>" > /etc/netops/shared_secret
+chmod 600 /etc/netops/shared_secret
+
+# Servis oluşturun (/etc/init.d/netops-agent):
+cat << 'EOF' > /etc/init.d/netops-agent
+#!/bin/sh /etc/rc.common
+START=95
+STOP=10
+USE_PROCD=1
+
+start_service() {
+    procd_open_instance
+    procd_set_param command /usr/bin/netops-agent --hub-url "https://<HUB_DOMAIN_VEYA_IP>"
+    procd_set_param respawn 3600 5 0
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_close_instance
+}
+EOF
+
+chmod +x /etc/init.d/netops-agent
+/etc/init.d/netops-agent enable
+/etc/init.d/netops-agent start
+```
+
+Artık Cisco MX64 cihazınız:
+- Kendi benzersiz MAC kimliğini ve donanım metriklerini okur,
+- Hub sunucusuna güvenli `X-Device-Token` (HMAC-SHA256) ile kaydolur,
+- WireGuard tünelini otomatik ayağa kaldırır,
+- Next.js Dashboard'unuzdaki **Filo Yönetimi** haritasında canlı olarak görünür!
+
+#### Detaylı Referans Dokümanları
+- 📘 [Cisco Meraki MX64 Cihaz & Sistem Blueprint](docs/cisco-mx64-device-blueprint.md)
+- 🛠️ [Cisco Meraki MX64 Manuel Kurulum & IP Çakışma Rehberi](docs/cisco-mx64-manual-setup.md)
+- 🚑 [Cisco Meraki MX64 Unbrick ve Geri Dönüş (Recovery) Kılavuzu](docs/cisco-mx64-recovery-guide.md)
 
 ## Güvenlik modeli ve üretime almadan önce
 
@@ -405,11 +497,27 @@ değişiklik göndermeden önce lütfen bir issue açıp yaklaşımınızı
 tartışalım — özellikle güvenlik-kritik alanlarda (OTA doğrulama, cihaz
 kimlik doğrulama) değişiklik öneriyorsanız.
 
-## Lisans
+## Lisans ve Ticari Model (Dual-Licensing)
 
-*(Bu depo için henüz bir lisans dosyası eklenmedi. Bir açık kaynak
-lisansı seçip kök dizine bir `LICENSE` dosyası eklemeniz, deponun ne
-şekilde kullanılıp dağıtılabileceğini netleştirir.)*
+Bu proje, hem açık kaynak topluluğunu destekleyen hem de kurumsal ve ticari kullanımlarda geliştirici haklarını koruyarak sürdürülebilir bir gelir modeli sunan **Çift Lisanslama (Dual-Licensing: AGPLv3 + Ticari Kurumsal Lisans)** modeli ile korunmaktadır:
+
+### 1. Açık Kaynak Topluluk Lisansı — GNU AGPLv3
+NetOpsWan'ın kaynak kodları, [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE) altında kamuya açıktır.
+- **Kimler ücretsiz kullanabilir?** Bireysel geliştiriciler, hobi amaçlı ağ kuranlar, üniversiteler, açık kaynak araştırmacıları ve kendi kurum içi altyapısında kaynak kodları değiştirmeden çalıştıranlar.
+- **Copyleft / Ağ Koruması (Anti-SaaS Kuralı):** Bu platformu veya modüllerini değiştirip bir ağ üzerinden (SaaS, Bulut SD-WAN, MSP veya yönetilen servis sağlayıcı olarak) üçüncü kişilere sunan herhangi bir kişi ya da kurum, sisteme yaptığı tüm eklemeleri ve entegre ettiği kodları da **AGPLv3 altında kamuya açık kaynak olarak sunmak zorundadır**.
+
+### 2. Ticari ve Kurumsal Lisans (Commercial Enterprise License)
+Eğer şirketiniz NetOpsWan'ı:
+- Kaynak kodlarınızı kamuya açma zorunluluğundan (AGPLv3 kopyalama/dağıtım şartlarından) muaf olarak kullanmak,
+- Kendi tescilli (closed-source) donanım, ürün veya ticari yazılım paketlerinize entegre etmek,
+- Müşterilerinize ücretli, ticari bir SD-WAN servisi / cihaz bundle'ı olarak satmak,
+- Kurumsal SLA, garantili teknik destek, özel donanım adaptasyonu (farklı router/SoC desteği) ve mimari danışmanlık ile devreye almak istiyorsa;
+
+Doğrudan geliştirici ve telif hakkı sahibi **Rifat Şeker** tarafından sağlanan **Ticari / Kurumsal Lisans** edinilmelidir.
+
+> 💼 **Ticari Lisanslama & Kurumsal İletişim:**  
+> Kurumsal lisanslama, SLA anlaşmaları, donanım tedarik ve iş ortaklığı görüşmeleri için lütfen iletişime geçin:  
+> **Rifat Şeker** · ARIOT
 
 ---
 

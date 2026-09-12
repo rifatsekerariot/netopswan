@@ -49,8 +49,9 @@ curl -sSL https://raw.githubusercontent.com/rifatsekerariot/netopswan/main/nginx
 if [ ! -f ".env" ]; then
   echo -e "${BLUE}[+] Sunucu IP adresi ve güvenlik anahtarları üretiliyor...${NC}"
   SERVER_IP=$(curl -s https://api.ipify.org || hostname -I | awk '{print $1}')
-  SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || echo "netopswan_enterprise_secret_2026_$(date +%s)")
-  DB_PASSWORD=$(openssl rand -hex 16 2>/dev/null || echo "AriotSecurePass2026")
+  SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || echo "netopswan_secret_$(date +%s)")
+  DB_PASSWORD=$(openssl rand -hex 16 2>/dev/null || echo "CHANGE_ME_SECURE_PASSWORD_$(date +%s)")
+  API_TOKEN=$(openssl rand -hex 20 2>/dev/null || echo "CHANGE_ME_API_TOKEN_$(date +%s)")
 
   cat <<EOF > .env
 # --- Temel Sunucu Yapılandırması ---
@@ -63,7 +64,7 @@ HTTPS_PORT=443
 DASHBOARD_DOMAIN=dashboard.openwisp.org
 API_DOMAIN=api.openwisp.org
 VPN_DOMAIN=openvpn.openwisp.org
-OPENWISP_API_TOKEN=3524d06794c7b25f20da8ea3183a3b6edde79b7f
+OPENWISP_API_TOKEN=${API_TOKEN}
 OPENWISP_API_HOST=api.openwisp.org
 OPENWISP_INTERNAL_HOST=openwisp_nginx
 OPENWISP_PORT=443

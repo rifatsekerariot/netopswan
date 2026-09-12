@@ -119,14 +119,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'openwisp_config.wsgi.application'
 
+import os
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'openwisp',
-        'USER': 'openwisp',
-        'PASSWORD': 'openwisp',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': os.environ.get('DB_NAME', 'openwisp'),
+        'USER': os.environ.get('DB_USER', 'openwisp'),
+        'PASSWORD': os.environ.get('DB_PASS', 'CHANGE_ME_STRONG_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 

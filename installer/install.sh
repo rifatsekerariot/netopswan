@@ -61,7 +61,8 @@ echo -e "${BLUE}[3/6] PostgreSQL veritabanı ve GIS uzantıları yapılandırıl
 systemctl start postgresql
 systemctl enable postgresql
 
-sudo -u postgres psql -c "CREATE USER openwisp WITH PASSWORD 'openwisp';" 2>/dev/null || true
+DB_PASS="${DB_PASS:-$(openssl rand -hex 16 2>/dev/null || echo "CHANGE_ME_STRONG_PASS_$(date +%s)")}"
+sudo -u postgres psql -c "CREATE USER openwisp WITH PASSWORD '$DB_PASS';" 2>/dev/null || true
 sudo -u postgres psql -c "ALTER USER openwisp CREATEDB;" 2>/dev/null || true
 sudo -u postgres psql -c "CREATE DATABASE openwisp OWNER openwisp;" 2>/dev/null || true
 sudo -u postgres psql -d openwisp -c "CREATE EXTENSION IF NOT EXISTS postgis;" 2>/dev/null || true

@@ -72,7 +72,7 @@ const p = new Pool({
   port: parseInt(process.env.POSTGRES_PORT || \"5432\"),
   database: process.env.POSTGRES_DB || \"netopswan\",
   user: process.env.POSTGRES_USER || \"postgres\",
-  password: process.env.POSTGRES_PASSWORD || \"postgres123\"
+  password: process.env.POSTGRES_PASSWORD || process.env.DB_PASSWORD || \"CHANGE_ME_PASSWORD\"
 });
 p.query(\"SELECT count(*) as dev_count FROM netops_devices\").then(r => {
   console.log(\"DB_OK:\" + r.rows[0].dev_count);

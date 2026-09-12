@@ -71,7 +71,7 @@ fi
 
 # TEST 4: Veritabanı ve Şifrelenmiş Parola Bütünlüğü (SHA-256)
 echo -e "${YELLOW}▶ 4. Veritabanı Kimlik Doğrulama Güvenliği (Zero Plaintext Passwords)${NC}"
-DB_PASSWORDS=$(PGPASSWORD=postgres123 psql -h 127.0.0.1 -U postgres -d netopswan -t -c "SELECT password_hash FROM netops_users LIMIT 1;" 2>/dev/null | tr -d ' \n' || echo "")
+DB_PASSWORDS=$(PGPASSWORD="${DB_PASSWORD:-CHANGE_ME_PASSWORD}" psql -h "${DB_HOST:-127.0.0.1}" -U "${DB_USER:-postgres}" -d "${DB_NAME:-netopswan}" -t -c "SELECT password_hash FROM netops_users LIMIT 1;" 2>/dev/null | tr -d ' \n' || echo "")
 
 if [ ${#DB_PASSWORDS} -eq 64 ]; then
     log_pass "Veritabanında Düz Metin (Plaintext) Şifre Yok (64 Karakter SHA-256 Hash Doğrulandı)" "Hash: ${DB_PASSWORDS:0:16}...${DB_PASSWORDS:48:16}"

@@ -46,23 +46,81 @@ def check():
 
 @app.command()
 def prep_usb(
-    usb_path: str = typer.Option(..., "--usb-path", "-u", help="FAT32 MBR USB mount dizini (Örn: /Volumes/OPENWRT)"),
-    hub_url: str = typer.Option("", "--hub-url", "-h", help="Hedef Merkez Hub API Adresi (Örn: https://musteri.domain.com/api/sdwan)")
+    usb_path: str = typer.Option(..., "--usb-path", "-u", help="FAT32 MBR USB mount dizini (Örn: /Volumes/OPENWRT)")
 ):
-    """FAT32 MBR USB belleği doğru Clayface kernel adlarıyla ve NetOps SD-WAN konfigürasyonuyla otomatik hazırlar."""
-    if not hub_url:
-        hub_url = Prompt.ask("Müşterinin Merkez Hub API Adresi (Hub URL)", default="")
-        if not hub_url:
-            log_error("Hub URL girilmedi! İşlem iptal edildi.")
+    """FAT32 MBR USB belleği doğru Clayface kernel adlarıyla otomatik hazırlar."""
+    initramfs_file = PAYLOAD_DIR / "openwrt-bcm5862x-generic-meraki_mx64-initramfs-kernel.bin"
+    prepare_usb_drive(Path(usb_path), initramfs_file)
+
+@app.command()
+def backup_full(
+    interface: str = typer.Option("", "--iface", "-i", help="Ağ arayüzü adı (boş bırakılırsa sorulur)"),
+    host_ip: str = typer.Option("192.168.1.2", "--host-ip", help="Bu bilgisayarın MX64 ile aynı ağdaki geçici IP'si"),
+):
+    """🎯 TAM CİHAZ YEDEĞİ: Henüz dönüştürülmemiş, STOK bir Meraki MX64'ün TÜM flash
+    bölümlerini (bootloader + kernel/rootfs + nvram/config - ne varsa hepsi) tek tek
+    indirir. `run` komutunun aksine hiçbir şey YAZMAZ/FLAŞLAMAZ - sadece okur/yedekler,
+    bu yüzden dönüştürme niyeti olmayan, sadece "ileride geri dönüş için orijinal
+    durumu sakla" amacıyla da güvenle çalıştırılabilir.
+
+    Elde edilen tam yedek, ileride AYNI donanım revizyonuna sahip dönüştürülmüş bir
+    cihazı orijinal durumuna geri getirmek için kullanılabilir (bkz. RECOVERY_GUIDE.md).
+    """
+    console.print(Panel("[bold green]MX64 TAM CİHAZ YEDEĞİ (Salt-Okunur, Hiçbir Şey Flaşlanmaz)[/bold green]"))
+
+    if not interface:
+        interfaces = get_network_interfaces()
+        default_iface = "en5" if "en5" in interfaces else ("en0" if "en0" in interfaces else interfaces[0])
+        interface = Prompt.ask("MX64'ün bağlı olduğu ethernet arayüzünü girin", default=default_iface)
+
+    configure_static_ip(interface, host_ip)
+
+    log_info("MX64 Diag Telnet (192.168.1.1:23) aranıyor...")
+    for _ in range(15):
+        if check_port_open("192.168.1.1", 23):
+            break
+        time.sleep(1)
+
+    telnet = MerakiTelnetClient("192.168.1.1", 23)
+    if not telnet.connect():
+        log_error("Telnet açılamadı. Cihazı Reset tuşuna basılı tutarak güç verip Diag moduna alın.")
+        return
+
+    try:
+        detector = DeviceDetector(telnet)
+        info = detector.analyze()
+        log_success(f"Cihaz Tespiti: {'A0 Revizyonu' if info.is_a0_rev else 'Standart MX64'} | SoC: {info.soc_raw_val}")
+        log_info(f"Tespit edilen bölümler: {info.mtd_map}")
+
+        if not info.mtd_map:
+            log_error("Hiçbir mtd bölümü tespit edilemedi - /proc/mtd okunamamış olabilir. İşlem durduruldu.")
             return
 
-    initramfs_file = PAYLOAD_DIR / "openwrt-bcm5862x-generic-meraki_mx64-initramfs-kernel.bin"
-    prepare_usb_drive(Path(usb_path), initramfs_file, hub_url=hub_url)
+        if not Confirm.ask(
+            f"[bold yellow]{len(info.mtd_map)} bölümün TAMAMI indirilecek (büyük bölümler dakikalar sürebilir). Devam edilsin mi?[/bold yellow]",
+            default=True,
+        ):
+            log_warning("İşlem kullanıcı tarafından durduruldu.")
+            return
+
+        flasher = MerakiFlasher(telnet, PAYLOAD_DIR, BACKUP_DIR, http_port=8000)
+        results = flasher.backup_all_partitions(info.mtd_map, host_ip=host_ip, mtd_sizes=info.mtd_sizes)
+
+        table = Table(title="Tam Cihaz Yedeği Sonucu")
+        table.add_column("Bölüm", style="cyan")
+        table.add_column("Etiket", style="magenta")
+        table.add_column("Durum", style="green")
+        for mtd_name, label in info.mtd_map.items():
+            status = f"✔ {results[mtd_name].name}" if mtd_name in results else "✖ BAŞARISIZ"
+            table.add_row(mtd_name, label, status)
+        console.print(table)
+
+    finally:
+        telnet.close()
 
 @app.command()
 def run(
-    interface: str = typer.Option("", "--iface", "-i", help="Ağ arayüzü adı (boş bırakılırsa sorulur)"),
-    hub_url: str = typer.Option("", "--hub-url", "-h", help="Hedef Merkez Hub API Adresi (Örn: https://musteri.domain.com/api/sdwan)")
+    interface: str = typer.Option("", "--iface", "-i", help="Ağ arayüzü adı (boş bırakılırsa sorulur)")
 ):
     """UÇTAN UCA TAM OTOMATİK SİHİRBAZ:
     1. Diag & Telnet Bağlantısı
@@ -72,11 +130,6 @@ def run(
     5. USB Hazırlama & USB Boot Rehberliği
     6. SSH Pipe ile Kalıcı Sysupgrade Kurulumu (Netmask / IP Fix Dahil)
     """
-    if not hub_url:
-        hub_url = Prompt.ask("Müşterinin Merkez Hub API Adresi (Hub URL)", default="")
-        if not hub_url:
-            log_error("Hub URL girilmedi! İşlem iptal edildi.")
-            return
     console.print(Panel("[bold green]Cisco Meraki MX64 Uçtan Uca OpenWrt Kurulum Sihirbazı[/bold green]\n[yellow]Bu sihirbaz cihazınızı stok durumdan tam çalışan OpenWrt'ye dönüştürür.[/yellow]"))
 
     # AĞ ARAYÜZÜ
@@ -111,9 +164,27 @@ def run(
         info = detector.analyze()
         log_success(f"Cihaz Tespiti: {'A0 Revizyonu' if info.is_a0_rev else 'Standart MX64'} | SoC: {info.soc_raw_val}")
 
-        # 2. MTD0 Yedeği
+        # 2. MTD0 Yedeği (her zaman - hızlı, küçük, U-Boot flashlama için zaten şart)
         flasher = MerakiFlasher(telnet, PAYLOAD_DIR, BACKUP_DIR, http_port=8000)
         flasher.backup_mtd0("192.168.1.2")
+
+        # 2b. TAM CİHAZ YEDEĞİ (opsiyonel) - "ileride bu donanım revizyonundaki bir
+        # cihazı orijinal stok Meraki durumuna geri döndürebilmek" için TÜM bölümlerin
+        # (kernel/rootfs/nvram dahil) indirilmesi. mtd0'dan çok daha uzun sürebilir
+        # (rootfs/ubi onlarca-yüzlerce MB olabilir) - bu yüzden varsayılan olarak
+        # SORULUR, otomatik çalışmaz. Bu adım tamamen salt-okunurdur, hiçbir şeyi
+        # değiştirmez/flaşlamaz - reddedilse de dönüştürme akışı normal devam eder.
+        if Confirm.ask(
+            "[bold cyan]Bu cihazın TÜM bölümlerinin (kernel/rootfs/nvram dahil) tam yedeğini de almak ister misiniz? "
+            "(İleride bu donanım revizyonundaki cihazları orijinal Meraki durumuna geri döndürmek için gereklidir)[/bold cyan]",
+            default=True,
+        ):
+            log_info(f"Tespit edilen bölümler: {info.mtd_map}")
+            results = flasher.backup_all_partitions(info.mtd_map, host_ip="192.168.1.2", mtd_sizes=info.mtd_sizes)
+            if len(results) == len(info.mtd_map):
+                log_success(f"✅ Tam cihaz yedeği tamamlandı ({len(results)} bölüm) - {BACKUP_DIR}")
+            else:
+                log_warning(f"⚠️ Tam cihaz yedeği KISMEN tamamlandı ({len(results)}/{len(info.mtd_map)} bölüm) - eksik bölümler için `mx64-tool backup-full` komutunu ayrıca çalıştırabilirsiniz.")
 
         # 3. Kilit Açma
         if info.mtd0_locked:
@@ -142,7 +213,7 @@ def run(
 
     usb_mount = Prompt.ask("USB Bellek Dizini", default="/Volumes/OPENWRT")
     initramfs_file = PAYLOAD_DIR / "openwrt-bcm5862x-generic-meraki_mx64-initramfs-kernel.bin"
-    prepare_usb_drive(Path(usb_mount), initramfs_file, hub_url=hub_url)
+    prepare_usb_drive(Path(usb_mount), initramfs_file)
 
     console.print(Panel("""[bold yellow]Lütfen Şimdi Şunları Yapın:[/bold yellow]
 1. USB belleği Mac'ten çıkarıp MX64'ün USB portuna takın.

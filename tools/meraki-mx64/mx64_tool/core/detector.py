@@ -11,6 +11,7 @@ class DeviceInfo:
     soc_raw_val: str
     mtd0_locked: bool
     mtd_map: Dict[str, str]
+    mtd_sizes: Dict[str, str]
     recommended_image: str
     recommended_initramfs: str
 
@@ -24,10 +25,12 @@ class DeviceDetector:
         # 1. MTD Tablosunu Oku
         mtd_output = self.telnet.execute_command("cat /proc/mtd", wait_seconds=1.0)
         mtd_map = {}
+        mtd_sizes = {}
         for line in mtd_output.splitlines():
             match = re.search(r'(mtd\d+):\s+([0-9a-fA-F]+)\s+[0-9a-fA-F]+\s+"([^"]+)"', line)
             if match:
                 mtd_map[match.group(1)] = match.group(3)
+                mtd_sizes[match.group(1)] = match.group(2)
 
         # 2. MTD0 Salt-Okunur Durumu
         ro_output = self.telnet.execute_command("cat /sys/block/mtdblock0/ro", wait_seconds=0.5)
@@ -67,6 +70,7 @@ class DeviceDetector:
             soc_raw_val=soc_val,
             mtd0_locked=mtd0_locked,
             mtd_map=mtd_map,
+            mtd_sizes=mtd_sizes,
             recommended_image=rec_image,
             recommended_initramfs=rec_initramfs
         )

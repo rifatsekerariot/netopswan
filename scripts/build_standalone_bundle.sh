@@ -93,7 +93,7 @@ Environment=POSTGRES_HOST=127.0.0.1
 Environment=POSTGRES_PORT=5432
 Environment=POSTGRES_DB=netopswan
 Environment=POSTGRES_USER=postgres
-Environment=POSTGRES_PASSWORD=postgres123
+Environment=POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-CHANGE_ME_STRONG_PASSWORD}
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=3

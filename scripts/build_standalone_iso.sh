@@ -73,9 +73,10 @@ d-i netcfg/get_hostname string netopswan-gateway
 d-i netcfg/get_domain string local
 
 # Root ve Admin Kullanıcıları (Parola ilk açılışta Setup Wizard tarafından kilitlenecek)
+ISO_ROOT_PASS="${ISO_ROOT_PASSWORD:-CHANGE_ME_SECURE_ROOT_PASSWORD}"
 d-i passwd/root-login boolean true
-d-i passwd/root-password password netopswan123
-d-i passwd/root-password-again password netopswan123
+d-i passwd/root-password password ${ISO_ROOT_PASS}
+d-i passwd/root-password-again password ${ISO_ROOT_PASS}
 d-i passwd/make-user boolean false
 
 # Saat Dilimi
